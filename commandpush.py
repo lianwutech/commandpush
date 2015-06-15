@@ -22,7 +22,7 @@ import pyodbc
 from libs.commandpush import load_config
 from libs.msodbc import ODBC_MS
 
-import setting
+from setting import *
 
 # 全局变量
 config_file_name = "datasync.cfg"
