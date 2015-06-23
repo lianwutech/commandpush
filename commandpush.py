@@ -19,10 +19,10 @@ import threading
 import logging
 import pyodbc
 
+import setting
 from libs.commandpush import load_config
 from libs.msodbc import ODBC_MS
 
-from setting import *
 
 # 全局变量
 config_file_name = "datasync.cfg"
@@ -33,29 +33,30 @@ logger = logging.getLogger('datasync')
 # 配置信息
 config_info = load_config(config_file_name)
 
+# 停止标记
+run_flag = False
+
+def stop():
+    run_flag = False
+
 # 数据库对象
 sql_server = ODBC_MS(server=config_info["sqlserver"]["host"],
                      database=config_info["sqlserver"]["database"],
                      uid=config_info["sqlserver"]["uid"],
                      pwd=config_info["sqlserver"]["pwd"])
 
-def main():
+def run():
     # 测试sql server
     if not sql_server.test_db():
         logger.error("database test fail.")
         sys.exit()
 
     while True:
+        # 获取设备指令
+        # 提交设备指令
         pass
 
         time.sleep(0.5)
-
-def entry_point():
-    """Zero-argument entry point for use with setuptools/distribute."""
-    raise SystemExit(main(sys.argv))
-
-if __name__ == '__main__':
-    main()
 
 
 
