@@ -28,3 +28,23 @@ def load_config(config_file_name):
     else:
         logger.error("config file is not exist. Please check!")
         return None
+
+# 打开临时文件
+def read_timestamp(file_name):
+    try:
+        file = open(file_name, "r")
+        content = file.readline()
+        if not content:
+            return ""
+        else:
+            return content
+    except Exception, e:
+        logger.error("read file %s fail, exception:%r." % (file_name, e))
+
+# 存储临时文件
+def write_timestamp(file_name, content):
+    try:
+        file = open(file_name, "w+")
+        file.write(content)
+    except Exception, e:
+        logger.error("read file %s fail, exception:%r." % (file_name, e))
