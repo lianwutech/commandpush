@@ -139,6 +139,5 @@ def run():
         write_timestamp(timestamp_file_name, timestamp)
         time.sleep(0.5)
 
-
-
-
+if __name__ == '__main__':
+    run()
