@@ -7,7 +7,10 @@ import json
 import logging
 import sqlite3
 
+from httplib2 import Http
+
 from libs.utils import convert
+
 
 # 初始化日志
 logger = logging.getLogger('cmdpush')
@@ -48,3 +51,20 @@ def write_timestamp(file_name, content):
         file.write(content)
     except Exception, e:
         logger.error("read file %s fail, exception:%r." % (file_name, e))
+
+
+def get_dict(url):
+    http_obj = Http(timeout=5)
+    try:
+        resp, content = http_obj.request(
+            uri=url,
+            method='GET',
+            headers={'Content-Type': 'application/json; charset=UTF-8'})
+    except Exception,e:
+        logger.error("get_dict exception:%r" % e)
+        return ""
+
+    if resp.status == 200:
+        return content
+
+    return ""

@@ -19,6 +19,7 @@ import threading
 import logging
 import pyodbc
 
+
 import setting
 from libs.commandpush import *
 from libs.msodbc import ODBC_MS
@@ -59,6 +60,7 @@ def run():
     service_id = config_info["platform"].get("service_id", 0)
     if project_id == 0:
         # 查询所有记录
+
         pass
     else:
         if service_id == 0:
