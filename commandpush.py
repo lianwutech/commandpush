@@ -19,7 +19,6 @@ import threading
 import logging
 import pyodbc
 
-
 import setting
 from libs.commandpush import *
 from libs.msodbc import ODBC_MS
@@ -58,15 +57,60 @@ def run():
     component_dict = {}
     project_id = config_info["platform"].get("project_id", 0)
     service_id = config_info["platform"].get("service_id", 0)
+    platform_token = config_info["platform"].get("auth_key", "")
+    command_code_config = config_info.get("command_code", {})
+
+    # 组件操作指令字典处理，component_type_id:operation_code
+    comand_code_dict = {}
+    for str_device_type in command_code_config:
+        str_type_id = str_device_type.split("_")[-1]
+        if str_type_id.isdigit():
+            comand_code_dict[int(str_type_id)] = command_code_config[str_device_type]
+        else:
+            logger.error("error type: %s" % str_device_type)
+
+    platform_url = config_info["platform"].get("url", "http://www.lianwuyun.cn/api/v1/")
     if project_id == 0:
         # 查询所有记录
-
-        pass
+        projects_url = platform_url + "projects"
+        result = get_dict(projects_url, platform_token)
+        if len(result) > 0:
+            projects = json.loads(result)
+        for project in projects:
+            services_url = projects_url + "/%d/services" % project["project_id"]
+            result = get_dict(services_url, platform_token)
+            if len(result) > 0:
+                services = json.loads(result)
+                for service in services:
+                    components_url = services_url + "/%d/components" % service["service_id"]
+                    result = get_dict(components_url, platform_token)
+                    if len(result) > 0:
+                        components = json.loads(result)
+                        for component in components:
+                            component_dict[component["component_id"]] = component
+                pass
     else:
         if service_id == 0:
-            pass
+            services_url = platform_url + "projects/%d/services" % project_id
+            result = get_dict(services_url, platform_token)
+            if len(result) > 0:
+                services = json.loads(result)
+                for service in services:
+                    components_url = services_url + "/%d/components" % service["service_id"]
+                    result = get_dict(components_url, platform_token)
+                    if len(result) > 0:
+                        components = json.loads(result)
+                        for component in components:
+                            component_dict[component["component_id"]] = component
         else:
-            pass
+            components_url = platform_url + "projects/%d/services/%d/components" % (project_id, service_id)
+            result = get_dict(components_url, platform_token)
+            if len(result) > 0:
+                components = json.loads(result)
+                for component in components:
+                    component_dict[component["component_id"]] = component
+
+    logger.debug("component_dict: %r" % component_dict)
 
     timestamp = read_timestamp(timestamp_file_name)
 
@@ -77,14 +121,22 @@ def run():
             from ebs_extend..mps_compcustomer
             where cc_createdate > %s
             """ % timestamp
-        records = sql_server.exec_query(sql)
+        commands_records = sql_server.exec_query(sql)
 
         # 提交设备指令
+        for command in commands_records:
+            component_id = command[0]
+            comand_data = command[1]
+            component = component_dict[component_id]
+            put_url = platform_url + "projects/%d/services/%d/components/%d/action" % \
+                                     (component["project_id"], component["service_id"], component_id)
+            data = {"component_id": component_id,
+                    "operation_code": comand_code_dict[component["component_type_id"]],
+                    "action_params": json.loads(comand_data)}
+            result = put_data(put_url, platform_token, data)
 
         # 存储时间戳变量
         write_timestamp(timestamp_file_name, timestamp)
-        pass
-
         time.sleep(0.5)
 
 
